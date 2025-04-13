@@ -30,11 +30,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   .container {
     flex-direction: row; /* Side by side layout on larger screens */
+    height: 100vh; /* Take full viewport height */
+  }
+
+  .map-container {
+    flex: 1;
+    height: 100vh; /* Full-screen map on larger screens */
+  }
+
+  .weather-details {
+    width: 30%;
+    padding: 1rem;
+    overflow-y: auto;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.8); /* Optional background color */
   }
 }
 
