@@ -21,6 +21,7 @@ A modern weather application built with **Next.js**, **Zustand** for state manag
 ## 🔧 Setup Instructions
 
 1. **Clone the repo**
+
    ```bash
    git clone https://github.com/Qamrul-Hassan/WeatherApp.git
    cd WeatherApp
@@ -31,30 +32,12 @@ npm install
 
 Add your API key
 
-    Create a .env.local file:
-
-    NEXT_PUBLIC_OPENWEATHER_API_KEY=your_api_key_here
-
 Run the development server
-
-    npm run dev
 
 🌐 API Used
 
-    OpenWeatherMap API
-
-    Geo API
-
 📸 Screenshots
-
-
-
-    Special thanks to OpenWeather for free weather data
-
-    React Leaflet for amazing map support
 
 📄 License
 
 This project is licensed under the MIT License.
-
-    Made with 💙 by Qamrul Hassan

@@ -1,97 +1,81 @@
-import styled, { keyframes } from "styled-components";
+"use client";
+import { useEffect, useRef } from "react";
 
-// Randomized keyframe for cloud movement
-const moveCloud = (duration) => keyframes`
-  0% {
-    transform: translateX(-100%) translateY(0) scale(1);
-  }
-  25% {
-    transform: translateX(25%) translateY(-10px) scale(1.1);
-  }
-  50% {
-    transform: translateX(50%) translateY(0) scale(1);
-  }
-  75% {
-    transform: translateX(75%) translateY(10px) scale(1.1);
-  }
-  100% {
-    transform: translateX(100%) translateY(0) scale(1);
-  }
-`;
+const CloudyAnimation = () => {
+  const cloudRefs = useRef([]);
 
-// Base cloud styles
-const CloudBase = styled.div`
-  width: 120px;
-  height: 70px;
-  background: ${(props) => props.cloudColor || "#f0f0f0"};
-  border-radius: 50%;
-  position: relative;
-  animation: ${(props) => moveCloud(props.duration)} ${(props) => props.duration}s ease-in-out infinite;
-  animation-delay: ${(props) => props.delay}s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  useEffect(() => {
+    let animationFrameId;
 
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    background: ${(props) => props.cloudColor || "#f0f0f0"};
-    border-radius: 50%;
-  }
+    const animateClouds = () => {
+      const time = Date.now() / 1000;
 
-  &::before {
-    width: 60px;
-    height: 60px;
-    top: -25px;
-    left: 20px;
-  }
+      cloudRefs.current.forEach((cloud, index) => {
+        if (cloud) {
+          const speed = 20 + index * 10;
+          const width = window.innerWidth + 400; // Buffer space for smooth transition
+          const offset = (time * speed) % width;
 
-  &::after {
-    width: 80px;
-    height: 80px;
-    top: -40px;
-    right: 15px;
-  }
-`;
+          cloud.style.transform = `translateX(${offset - 200}px)`; // Start from -200 and loop around
+        }
+      });
 
-// Dark cloud component with upside-down effect and floating from left to right
-const DarkCloud = () => {
-  const duration = Math.random() * 10 + 8; // Random duration between 8s and 18s
-  const delay = Math.random() * 5; // Random delay between 0s and 5s
+      animationFrameId = requestAnimationFrame(animateClouds);
+    };
+
+    animateClouds();
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  const cloudBase =
+    "absolute rounded-full opacity-100 shadow-[0_6px_20px_rgba(0,0,0,0.3)] pointer-events-none will-change-transform";
+
   return (
-    <CloudBase
-      cloudColor="#444444"
-      duration={duration}
-      delay={delay}
-      style={{
-        transform: "rotate(180deg)", // Upside down effect
-        position: "absolute",
-        top: "25%", // Position it vertically in the middle
-        left: "50%", // Horizontally centered
-        transformOrigin: "center", // Make sure it rotates from the center
-      }}
-    />
+    <div className="relative w-full h-48 flex items-center justify-center z-0 pointer-events-none overflow-hidden">
+      {/* Cloud 1 - White */}
+      <div
+        ref={(el) => (cloudRefs.current[0] = el)}
+        className={`${cloudBase} w-56 h-28 bg-white`} // Cloud size fixed for all devices
+        style={{
+          top: "10%",
+          left: "-200px", // Start cloud off-screen to the left
+        }}
+        aria-hidden="true"
+      >
+        <div className="absolute w-24 h-24 bg-white rounded-full top-[-25px] left-6" />
+        <div className="absolute w-28 h-28 bg-white rounded-full top-[-30px] right-4" />
+      </div>
+
+      {/* Cloud 2 - Light Gray */}
+      <div
+        ref={(el) => (cloudRefs.current[1] = el)}
+        className={`${cloudBase} w-60 h-32 bg-gray-200`} // Cloud size fixed for all devices
+        style={{
+          top: "20%",
+          left: "-300px", // Start cloud off-screen to the left
+        }}
+        aria-hidden="true"
+      >
+        <div className="absolute w-28 h-28 bg-gray-200 rounded-full top-[-20px] left-6" />
+        <div className="absolute w-32 h-32 bg-gray-200 rounded-full top-[-30px] right-4" />
+      </div>
+
+      {/* Cloud 3 - Medium Gray */}
+      <div
+        ref={(el) => (cloudRefs.current[2] = el)}
+        className={`${cloudBase} w-64 h-32 bg-gray-400`} // Cloud size fixed for all devices
+        style={{
+          top: "25%",
+          left: "-400px", // Start cloud off-screen to the left
+        }}
+        aria-hidden="true"
+      >
+        <div className="absolute w-32 h-32 bg-gray-400 rounded-full top-[-25px] left-6" />
+        <div className="absolute w-36 h-36 bg-gray-400 rounded-full top-[-35px] right-4" />
+      </div>
+    </div>
   );
 };
-
-// Cloud components with randomized animation duration and delay
-const WhiteCloud = () => {
-  const duration = Math.random() * 10 + 8; // Random duration between 8s and 18s
-  const delay = Math.random() * 5; // Random delay between 0s and 5s
-  return <CloudBase cloudColor="#ffffff" duration={duration} delay={delay} />;
-};
-
-const GrayCloud = () => {
-  const duration = Math.random() * 10 + 8; // Random duration between 8s and 18s
-  const delay = Math.random() * 5; // Random delay between 0s and 5s
-  return <CloudBase cloudColor="#b0b0b0" duration={duration} delay={delay} />;
-};
-
-const CloudyAnimation = () => (
-  <>
-    <WhiteCloud />
-    <GrayCloud />
-    <DarkCloud /> {/* Dark cloud in the middle, upside-down */}
-  </>
-);
 
 export default CloudyAnimation;

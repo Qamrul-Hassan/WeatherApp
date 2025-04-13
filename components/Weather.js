@@ -190,7 +190,7 @@ const Weather = () => {
         )}
       </div>
 
-      <div className="w-full lg:w-1/2 h-[400px] relative z-10">
+      <div className="w-full lg:w-1/2 h-[450px] relative z-10">
         <LiveMap lat={weather?.coord?.lat} lon={weather?.coord?.lon} />
       </div>
     </div>
