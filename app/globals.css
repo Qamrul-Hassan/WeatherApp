@@ -24,3 +24,83 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Leaflet minimal required styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  outline: none;
+}
+
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-pane > svg,
+.leaflet-pane > canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.leaflet-tile {
+  height: 256px;
+  width: 256px;
+  will-change: transform;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
+
+.leaflet-marker-icon {
+  margin-top: -41px;
+  margin-left: -13px;
+}
+
+.leaflet-popup-content-wrapper {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+}
+
+/* Leaflet core styles (needed for the map to work properly) */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  outline: none;
+}
+
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-pane > svg,
+.leaflet-pane > canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.leaflet-tile {
+  height: 256px;
+  width: 256px;
+  will-change: transform;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
+
+.leaflet-marker-icon {
+  margin-top: -41px;
+  margin-left: -13px;
+}
+
+.leaflet-popup-content-wrapper {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+}
