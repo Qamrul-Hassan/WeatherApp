@@ -13,10 +13,10 @@ const CloudyAnimation = () => {
       cloudRefs.current.forEach((cloud, index) => {
         if (cloud) {
           const speed = 20 + index * 10;
-          const width = window.innerWidth + 400; // Buffer space for smooth transition
+          const width = window.innerWidth + 400;
           const offset = (time * speed) % width;
 
-          cloud.style.transform = `translateX(${offset - 200}px)`; // Start from -200 and loop around
+          cloud.style.transform = `translateX(${offset - 200}px)`;
         }
       });
 
@@ -29,50 +29,44 @@ const CloudyAnimation = () => {
   }, []);
 
   const cloudBase =
-    "absolute rounded-full opacity-100 shadow-[0_6px_20px_rgba(0,0,0,0.3)] pointer-events-none will-change-transform";
+    "absolute rounded-full opacity-100 pointer-events-none will-change-transform shadow-lg";
 
   return (
     <div className="relative w-full h-48 flex items-center justify-center z-0 pointer-events-none overflow-hidden">
-      {/* Cloud 1 - White */}
+      {/* Stylized Cloud 1 */}
       <div
         ref={(el) => (cloudRefs.current[0] = el)}
-        className={`${cloudBase} w-56 h-28 bg-white`} // Cloud size fixed for all devices
-        style={{
-          top: "10%",
-          left: "-200px", // Start cloud off-screen to the left
-        }}
+        className={`${cloudBase} w-56 h-24 bg-gradient-to-b from-gray-300 to-gray-400`}
+        style={{ top: "15%", left: "-200px" }}
         aria-hidden="true"
       >
-        <div className="absolute w-24 h-24 bg-white rounded-full top-[-25px] left-6" />
-        <div className="absolute w-28 h-28 bg-white rounded-full top-[-30px] right-4" />
+        <div className="absolute w-20 h-20 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full top-[-20px] left-4" />
+        <div className="absolute w-24 h-24 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full top-[-25px] right-2" />
+        <div className="absolute w-16 h-16 bg-gradient-to-b from-gray-300 to-gray-400 rounded-full top-0 left-1/2 transform -translate-x-1/2" />
       </div>
 
-      {/* Cloud 2 - Light Gray */}
+      {/* Stylized Cloud 2 */}
       <div
         ref={(el) => (cloudRefs.current[1] = el)}
-        className={`${cloudBase} w-60 h-32 bg-gray-200`} // Cloud size fixed for all devices
-        style={{
-          top: "20%",
-          left: "-300px", // Start cloud off-screen to the left
-        }}
+        className={`${cloudBase} w-64 h-28 bg-gradient-to-b from-gray-400 to-gray-500`}
+        style={{ top: "20%", left: "-300px" }}
         aria-hidden="true"
       >
-        <div className="absolute w-28 h-28 bg-gray-200 rounded-full top-[-20px] left-6" />
-        <div className="absolute w-32 h-32 bg-gray-200 rounded-full top-[-30px] right-4" />
+        <div className="absolute w-24 h-24 bg-gradient-to-b from-gray-400 to-gray-500 rounded-full top-[-25px] left-4" />
+        <div className="absolute w-28 h-28 bg-gradient-to-b from-gray-400 to-gray-500 rounded-full top-[-30px] right-2" />
+        <div className="absolute w-20 h-20 bg-gradient-to-b from-gray-400 to-gray-500 rounded-full top-0 left-1/2 transform -translate-x-1/2" />
       </div>
 
-      {/* Cloud 3 - Medium Gray */}
+      {/* Stylized Cloud 3 */}
       <div
         ref={(el) => (cloudRefs.current[2] = el)}
-        className={`${cloudBase} w-64 h-32 bg-gray-400`} // Cloud size fixed for all devices
-        style={{
-          top: "25%",
-          left: "-400px", // Start cloud off-screen to the left
-        }}
+        className={`${cloudBase} w-72 h-32 bg-gradient-to-b from-gray-500 to-gray-600`}
+        style={{ top: "25%", left: "-400px" }}
         aria-hidden="true"
       >
-        <div className="absolute w-32 h-32 bg-gray-400 rounded-full top-[-25px] left-6" />
-        <div className="absolute w-36 h-36 bg-gray-400 rounded-full top-[-35px] right-4" />
+        <div className="absolute w-28 h-28 bg-gradient-to-b from-gray-500 to-gray-600 rounded-full top-[-30px] left-4" />
+        <div className="absolute w-32 h-32 bg-gradient-to-b from-gray-500 to-gray-600 rounded-full top-[-35px] right-2" />
+        <div className="absolute w-24 h-24 bg-gradient-to-b from-gray-500 to-gray-600 rounded-full top-0 left-1/2 transform -translate-x-1/2" />
       </div>
     </div>
   );

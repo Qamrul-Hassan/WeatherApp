@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import 'leaflet/dist/leaflet.css';
 
 :root {
   --background: #ffffff;
@@ -103,6 +104,7 @@ body {
   .weather-details {
     margin-top: 16px;
     width: 100%;
+    
   }
 
   .weather-details h3 {
@@ -118,7 +120,7 @@ body {
 @media (min-width: 640px) {
   /* Larger devices: Adjust the map size and layout for better view */
   .leaflet-container {
-    height: 400px; /* Larger map on bigger screens */
+    height: 680px; /* Larger map on bigger screens */
   }
 }
 

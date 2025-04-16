@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useMemo } from "react";
-import "leaflet/dist/leaflet.css";
 
 const LiveMap = ({ lat, lon, cityName = "Location" }) => {
   const [mounted, setMounted] = useState(false);
