@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LiveMap from "./LiveMap";
 import SunnyAnimation from "./animations/SunnyAnimation";
 import RainAnimation from "./animations/RainAnimation";
@@ -37,6 +37,75 @@ const BANGLADESH_CITIES = [
   { name: "Sylhet", state: "Sylhet", country: "BD", lat: 24.8949, lon: 91.8687 },
   { name: "Barishal", state: "Barishal", country: "BD", lat: 22.701, lon: 90.3535 },
 ];
+
+let countryIndexPromise = null;
+let countryIndex = null;
+
+function normalizeCountryKey(value = "") {
+  return sanitizePlaceText(String(value || "")).toLowerCase();
+}
+
+function compactCountryKey(value = "") {
+  return normalizeCountryKey(value).replace(/[^a-z0-9]/g, "");
+}
+
+function isFiniteCoordinate(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+async function getCountryIndex() {
+  if (countryIndex) return countryIndex;
+  if (countryIndexPromise) return countryIndexPromise;
+
+  countryIndexPromise = (async () => {
+    const response = await fetch(
+      "https://restcountries.com/v3.1/all?fields=name,cca2,capital,altSpellings,capitalInfo,latlng"
+    );
+
+    if (!response.ok) {
+      throw new Error("Unable to load country metadata.");
+    }
+
+    const data = await response.json();
+    const countries = Array.isArray(data) ? data : [];
+    const index = new Map();
+
+    for (const country of countries) {
+      const code = String(country?.cca2 || "").toUpperCase();
+      if (!code) continue;
+
+      const name = country?.name?.common || country?.name?.official || code;
+      const capital = Array.isArray(country?.capital)
+        ? country.capital[0]
+        : country?.capital || "";
+
+      const info = { code, name, capital: capital || "" };
+
+      const keys = [
+        normalizeCountryKey(code),
+        normalizeCountryKey(country?.name?.common),
+        normalizeCountryKey(country?.name?.official),
+      ];
+
+      if (Array.isArray(country?.altSpellings)) {
+        keys.push(...country.altSpellings.map((item) => normalizeCountryKey(item)));
+      }
+
+      for (const key of keys) {
+        if (key) index.set(key, info);
+      }
+    }
+
+    countryIndex = index;
+    return index;
+  })()
+    .catch(() => null)
+    .finally(() => {
+      countryIndexPromise = null;
+    });
+
+  return countryIndexPromise;
+}
 
 const BD_CITY_ALIASES = {
   dhaka: "Dhaka",
@@ -206,6 +275,8 @@ const Weather = () => {
   const [error, setError] = useState("");
   const [unit, setUnit] = useState("metric");
 
+  const countryInfoCache = useRef(new Map());
+
   const theme = useMemo(() => {
     const condition = getCondition(weather?.weather?.[0]?.main);
     return themes[condition] || themes.default;
@@ -259,45 +330,29 @@ const Weather = () => {
     return Array.isArray(data) ? data : [];
   }, []);
 
-  const fetchCountryInfo = useCallback(async (query) => {
-    const normalized = sanitizePlaceText(normalizeQuery(query)).toLowerCase();
-    if (normalized.length < 2) return null;
+  const fetchCountryInfo = useCallback(
+    async (query) => {
+      const normalized = normalizeCountryKey(normalizeQuery(query));
+      const compact = compactCountryKey(normalized);
+      if (normalized.length < 2) return null;
+      if (/[0-9]/.test(normalized)) return null;
 
-    try {
-      const response = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`
-      );
-      if (!response.ok) return null;
-      const data = await response.json();
-      if (!Array.isArray(data) || data.length === 0) return null;
+      if (countryInfoCache.current.has(normalized)) {
+        return countryInfoCache.current.get(normalized);
+      }
 
-      // Find the best match for country/location
-      const match = data.find((location) => {
-        const locName = sanitizePlaceText(location?.name || "").toLowerCase();
-        const stateName = sanitizePlaceText(location?.state || "").toLowerCase();
-        const countryName = sanitizePlaceText(location?.country || "").toLowerCase();
-        
-        // Exact match on country name or country code
-        return (
-          countryName === normalized ||
-          location?.country?.toLowerCase() === normalized ||
-          locName === normalized ||
-          stateName === normalized
-        );
-      });
-
-      const location = match || data[0];
-      if (!location?.country) return null;
-
-      return {
-        code: location.country.toUpperCase(),
-        name: location.country || "",
-        capital: location.name || "",
-      };
-    } catch {
-      return null;
-    }
-  }, [API_KEY]);
+      try {
+        const index = await getCountryIndex();
+        const info = index?.get(normalized) || (compact ? index?.get(compact) : null) || null;
+        countryInfoCache.current.set(normalized, info);
+        return info;
+      } catch {
+        countryInfoCache.current.set(normalized, null);
+        return null;
+      }
+    },
+    []
+  );
 
   const resolveSearchIntent = useCallback(
     async (rawInput) => {
@@ -357,7 +412,7 @@ const Weather = () => {
       const preferredBangladeshCity = getPreferredBangladeshCity(normalizedLocation);
       const intent = await resolveSearchIntent(location);
       const countryInfo = intent.countryInfo;
-      const cityTerm = intent.cityTerm || normalizedLocation;
+      const cityTerm = intent.cityTerm ?? normalizedLocation;
 
       setLoading(true);
       setError("");
@@ -369,7 +424,17 @@ const Weather = () => {
           if (preferredBangladeshCity) {
             target = preferredBangladeshCity;
           } else if (countryInfo?.code) {
-            if (!cityTerm && countryInfo.capital) {
+            if (!cityTerm && isFiniteNumber(countryInfo.lat) && isFiniteNumber(countryInfo.lon)) {
+              target = {
+                name: countryInfo.capital || countryInfo.name,
+                state: countryInfo.name,
+                country: countryInfo.code,
+                lat: countryInfo.lat,
+                lon: countryInfo.lon,
+              };
+            }
+
+            if (!target && !cityTerm && countryInfo.capital) {
               const capitalResults = await fetchGeoLocations(`${countryInfo.capital},${countryInfo.code}`, 6);
               const capitalInsideCountry = capitalResults.filter((city) => city.country === countryInfo.code);
               if (capitalInsideCountry.length > 0) {
@@ -473,18 +538,33 @@ const Weather = () => {
         const fallbackCities = getCountryFallbackCities(normalized);
         const intent = await resolveSearchIntent(input);
         const countryInfo = intent.countryInfo;
-        const cityTerm = intent.cityTerm || normalized;
+        const cityTerm = intent.cityTerm ?? normalized;
 
         if (countryInfo?.code) {
           const countryResults = [];
+
+          if (!cityTerm && isFiniteNumber(countryInfo.lat) && isFiniteNumber(countryInfo.lon)) {
+            setSuggestions([
+              {
+                name: countryInfo.capital || countryInfo.name,
+                state: countryInfo.name,
+                country: countryInfo.code,
+                lat: countryInfo.lat,
+                lon: countryInfo.lon,
+              },
+            ]);
+            return;
+          }
 
           if (!cityTerm && countryInfo.capital) {
             const capitalCandidates = await fetchGeoLocations(`${countryInfo.capital},${countryInfo.code}`, 8);
             countryResults.push(...capitalCandidates.filter((city) => city.country === countryInfo.code));
           }
 
-          const scopedCandidates = await fetchGeoLocations(`${cityTerm},${countryInfo.code}`, 14);
-          countryResults.push(...scopedCandidates.filter((city) => city.country === countryInfo.code));
+          if (cityTerm) {
+            const scopedCandidates = await fetchGeoLocations(`${cityTerm},${countryInfo.code}`, 14);
+            countryResults.push(...scopedCandidates.filter((city) => city.country === countryInfo.code));
+          }
 
           const rankedCountryResults = countryResults
             .slice()
@@ -589,16 +669,16 @@ const Weather = () => {
   const displayTemperature =
     typeof temperature === "number"
       ? unit === "metric"
-        ? `${Math.round(temperature)}°${unitSymbol}`
-        : `${Math.round(toFahrenheit(temperature))}°${unitSymbol}`
+        ? `${Math.round(temperature)}Â°${unitSymbol}`
+        : `${Math.round(toFahrenheit(temperature))}Â°${unitSymbol}`
       : "--";
 
   const feelsLike = weather?.main?.feels_like;
   const displayFeelsLike =
     typeof feelsLike === "number"
       ? unit === "metric"
-        ? `${Math.round(feelsLike)}°${unitSymbol}`
-        : `${Math.round(toFahrenheit(feelsLike))}°${unitSymbol}`
+        ? `${Math.round(feelsLike)}Â°${unitSymbol}`
+        : `${Math.round(toFahrenheit(feelsLike))}Â°${unitSymbol}`
       : "--";
 
   const windSpeed = weather?.wind?.speed;
@@ -677,7 +757,7 @@ const Weather = () => {
                 aria-label="Toggle temperature unit"
                 onClick={() => setUnit((prev) => (prev === "metric" ? "imperial" : "metric"))}
               >
-                {unit === "metric" ? "°C" : "°F"}
+                {unit === "metric" ? "Â°C" : "Â°F"}
               </button>
             </div>
           </div>
@@ -743,3 +823,10 @@ const Weather = () => {
 };
 
 export default Weather;
+
+
+
+
+
+
+
