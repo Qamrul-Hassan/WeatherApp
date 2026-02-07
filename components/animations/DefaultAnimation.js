@@ -1,10 +1,13 @@
-const DefaultAnimation = () => (
-    <svg width="150" height="150" viewBox="0 0 150 150">
-      <circle cx="75" cy="75" r="50" fill="gray" />
-      <text x="50%" y="50%" textAnchor="middle" fill="white" fontSize="20" dy=".3em">
-        ?
-      </text>
-    </svg>
+"use client";
+
+const DefaultAnimation = () => {
+  return (
+    <div className="scene scene-default" aria-hidden="true">
+      <div className="default-glow" />
+      <div className="default-orb" />
+      <div className="default-wave" />
+    </div>
   );
-  
-  export default DefaultAnimation;
+};
+
+export default DefaultAnimation;

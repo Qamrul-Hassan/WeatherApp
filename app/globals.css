@@ -1,132 +1,739 @@
 @import "tailwindcss";
-@import 'leaflet/dist/leaflet.css';
+@import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-0: #030712;
+  --bg-1: #0f172a;
+  --panel: rgba(10, 18, 35, 0.74);
+  --panel-border: rgba(148, 163, 184, 0.24);
+  --surface: rgba(30, 41, 59, 0.4);
+  --text-0: #e2e8f0;
+  --text-1: #94a3b8;
+  --accent: #38bdf8;
+  --danger: #f87171;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--text-0);
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 14% 16%, rgba(14, 165, 233, 0.2), transparent 42%),
+    radial-gradient(circle at 84% 8%, rgba(14, 116, 144, 0.2), transparent 46%),
+    linear-gradient(140deg, var(--bg-0), var(--bg-1) 58%, #111827);
 }
 
-/* Global layout for the map and weather details */
-.container {
+.app-shell {
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.app-header {
+  text-align: center;
+  margin: 0 auto 1rem;
+  max-width: 46rem;
+}
+
+.app-kicker {
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: #7dd3fc;
+}
+
+.app-title {
+  margin: 0.45rem 0 0;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  line-height: 1.05;
+  font-size: clamp(1.9rem, 4.2vw, 3.4rem);
+  color: #f8fafc;
+}
+
+.app-content {
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.weather-shell {
+  border-radius: 26px;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 24px 90px rgba(2, 6, 23, 0.55);
+  background: linear-gradient(160deg, rgba(2, 6, 23, 0.64), rgba(15, 23, 42, 0.78));
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.theme-clear {
+  background:
+    radial-gradient(circle at 78% 4%, rgba(250, 204, 21, 0.3), transparent 32%),
+    linear-gradient(165deg, rgba(30, 64, 175, 0.58), rgba(3, 105, 161, 0.6));
+}
+
+.theme-rain {
+  background:
+    radial-gradient(circle at 24% 8%, rgba(56, 189, 248, 0.16), transparent 32%),
+    linear-gradient(165deg, rgba(8, 47, 73, 0.78), rgba(30, 58, 138, 0.65));
+}
+
+.theme-cloudy {
+  background:
+    radial-gradient(circle at 80% 8%, rgba(148, 163, 184, 0.18), transparent 36%),
+    linear-gradient(165deg, rgba(30, 41, 59, 0.82), rgba(51, 65, 85, 0.68));
+}
+
+.theme-snow {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(186, 230, 253, 0.22), transparent 30%),
+    linear-gradient(165deg, rgba(30, 58, 138, 0.65), rgba(15, 23, 42, 0.72));
+}
+
+.theme-default {
+  background:
+    radial-gradient(circle at 75% 8%, rgba(125, 211, 252, 0.2), transparent 30%),
+    linear-gradient(165deg, rgba(2, 6, 23, 0.76), rgba(30, 41, 59, 0.7));
+}
+
+.weather-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: clamp(0.9rem, 2vw, 1.4rem);
+}
+
+.weather-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.weather-header {
+  margin-bottom: 0.95rem;
+}
+
+.weather-kicker {
+  margin: 0 0 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.74rem;
+  color: #7dd3fc;
+}
+
+.weather-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  font-weight: 760;
+}
+
+.weather-search {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+}
+
+.weather-search input {
+  height: 2.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0 0.85rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.weather-search input:focus-visible {
+  border-color: rgba(56, 189, 248, 0.98);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3), 0 0 0 6px rgba(14, 165, 233, 0.14);
+}
+
+.weather-search button,
+.location-btn,
+.unit-toggle {
+  border: 0;
+  border-radius: 12px;
+  color: #f8fafc;
+  background: linear-gradient(120deg, #0284c7, #0369a1);
+  padding: 0 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.weather-search button:hover,
+.location-btn:hover,
+.unit-toggle:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.weather-suggestions {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0.35rem;
+  border-radius: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(7, 14, 29, 0.98);
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.5);
+  max-height: 13rem;
+  overflow-y: auto;
+}
+
+.weather-suggestions li {
+  padding: 0.62rem 0.7rem;
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.weather-suggestions li:hover,
+.weather-suggestions li.is-active {
+  background: rgba(56, 189, 248, 0.32);
+  border-color: rgba(125, 211, 252, 0.65);
+  color: #f8fafc;
+  box-shadow: inset 3px 0 0 #22d3ee;
+}
+
+.weather-meta-row {
+  margin-top: 0.9rem;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.meta-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.weather-location {
+  margin: 0;
+  color: #f0f9ff;
+  font-size: 1rem;
+  font-weight: 640;
+  text-shadow: 0 1px 10px rgba(125, 211, 252, 0.28);
+}
+
+.location-btn {
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  font-size: 0.84rem;
+}
+
+.unit-toggle {
+  min-width: 3.25rem;
+}
+
+.weather-status,
+.weather-error {
+  margin: 0.85rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.weather-status {
+  background: rgba(2, 132, 199, 0.16);
+  color: #bae6fd;
+}
+
+.weather-error {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--danger);
+}
+
+.weather-animation-wrap {
+  margin-top: 1rem;
+  padding: 0.7rem;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.weather-temp {
+  margin: 0.85rem 0 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 780;
+  line-height: 1;
+}
+
+.weather-desc {
+  margin: 0.35rem 0 0;
+  color: #bfdbfe;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.weather-time {
+  margin: 0.35rem 0 0;
+  color: var(--text-1);
+  font-size: 0.9rem;
+}
+
+.weather-stats {
+  margin: 0.95rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.weather-stats div {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--surface);
+  padding: 0.62rem 0.72rem;
+}
+
+.weather-stats dt {
+  color: #94a3b8;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weather-stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  font-weight: 680;
+  color: #e0f2fe;
+}
+
+.weather-map-card {
+  border-radius: 20px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.map-frame {
   width: 100%;
+  min-height: 19rem;
+  height: 100%;
 }
 
-@media (min-width: 1024px) {
-  .container {
-    flex-direction: row; /* Side by side layout on larger screens */
-    height: 100vh; /* Take full viewport height */
-  }
-
-  .map-container {
-    flex: 1;
-    height: 100vh; /* Full-screen map on larger screens */
-  }
-
-  .weather-details {
-    width: 30%;
-    padding: 1rem;
-    overflow-y: auto;
-    height: 100vh;
-    background-color: rgba(255, 255, 255, 0.8); /* Optional background color */
-  }
+.map-skeleton {
+  width: 100%;
+  min-height: 19rem;
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  color: var(--text-1);
+  background: rgba(15, 23, 42, 0.6);
 }
 
-/* Leaflet minimal required styles */
+.map-skeleton-dot {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 9999px;
+  margin: 0 auto;
+  background: #38bdf8;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.map-skeleton-text {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.map-popup-content {
+  color: #111827;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.map-popup-title {
+  margin: 0 0 0.15rem;
+  color: #0c4a6e;
+  font-weight: 700;
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  height: 10.6rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.scene-sunny {
+  background: linear-gradient(180deg, rgba(255, 241, 118, 0.2), rgba(245, 158, 11, 0.08));
+}
+
+.sun-core {
+  width: 3.7rem;
+  height: 3.7rem;
+  border-radius: 9999px;
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 65%, #b45309);
+  animation: sunFloat 3.4s ease-in-out infinite;
+}
+
+.sun-aura {
+  width: 6.6rem;
+  height: 6.6rem;
+  border-radius: 9999px;
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35), transparent 70%);
+  animation: pulse 2.2s ease-in-out infinite;
+}
+
+.sun-rays {
+  position: absolute;
+  inset: 0;
+  animation: spin 18s linear infinite;
+}
+
+.sun-ray {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.2rem;
+  height: 1.6rem;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, rgba(253, 224, 71, 0.95), rgba(245, 158, 11, 0.25));
+}
+
+.scene-cloudy {
+  background: linear-gradient(180deg, rgba(203, 213, 225, 0.2), rgba(30, 41, 59, 0.15));
+}
+
+.cloud-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.cloud-layer-back {
+  opacity: 0.62;
+  animation: driftSlow 18s linear infinite;
+}
+
+.cloud-layer-front {
+  opacity: 0.82;
+  animation: driftFast 11s linear infinite;
+}
+
+.cloud {
+  position: absolute;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #f1f5f9, #94a3b8);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  background: inherit;
+}
+
+.cloud-1 {
+  width: 7rem;
+  height: 2.8rem;
+  top: 16%;
+  left: -4rem;
+}
+
+.cloud-2 {
+  width: 8rem;
+  height: 3.1rem;
+  top: 46%;
+  left: 32%;
+}
+
+.cloud-3 {
+  width: 7.4rem;
+  height: 3rem;
+  top: 24%;
+  left: 10%;
+}
+
+.cloud-4 {
+  width: 8.4rem;
+  height: 3.4rem;
+  top: 58%;
+  left: 68%;
+}
+
+.cloud::before {
+  width: 45%;
+  height: 85%;
+  left: 10%;
+  top: -45%;
+}
+
+.cloud::after {
+  width: 42%;
+  height: 80%;
+  right: 12%;
+  top: -40%;
+}
+
+.scene-rain {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.26), rgba(15, 23, 42, 0.35));
+}
+
+.rain-cloud {
+  position: absolute;
+  width: 8.5rem;
+  height: 3.15rem;
+  border-radius: 9999px;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #e2e8f0, #94a3b8);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.2);
+}
+
+.rain-cloud::before,
+.rain-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  background: inherit;
+}
+
+.rain-cloud::before {
+  width: 3.1rem;
+  height: 3.1rem;
+  top: -1.2rem;
+  left: 1.1rem;
+}
+
+.rain-cloud::after {
+  width: 3.4rem;
+  height: 3.4rem;
+  top: -1.4rem;
+  right: 1.1rem;
+}
+
+.rain-field {
+  position: absolute;
+  inset: 0;
+}
+
+.raindrop {
+  position: absolute;
+  top: -12%;
+  width: 1.5px;
+  height: 1rem;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, rgba(186, 230, 253, 0.9), rgba(56, 189, 248, 0.2));
+  animation-name: rainfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.scene-snow {
+  background: linear-gradient(180deg, rgba(186, 230, 253, 0.2), rgba(30, 41, 59, 0.25));
+}
+
+.snow-field {
+  position: absolute;
+  inset: 0;
+}
+
+.snowflake {
+  position: absolute;
+  top: -12%;
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.scene-default {
+  background: radial-gradient(circle at 30% 25%, rgba(56, 189, 248, 0.3), transparent 42%), rgba(15, 23, 42, 0.45);
+}
+
+.default-glow {
+  position: absolute;
+  width: 8.8rem;
+  height: 8.8rem;
+  border-radius: 9999px;
+  top: -2.2rem;
+  right: -1rem;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.4), transparent 72%);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+
+.default-orb {
+  position: absolute;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 9999px;
+  left: 1.1rem;
+  top: 2.2rem;
+  background: radial-gradient(circle at 35% 35%, #bfdbfe, #0284c7 70%);
+  animation: float 4.2s ease-in-out infinite;
+}
+
+.default-wave {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: 1.2rem;
+  height: 2.8rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(2, 132, 199, 0.12), rgba(186, 230, 253, 0.2), rgba(2, 132, 199, 0.12));
+  animation: driftSlow 10s linear infinite;
+}
+
 .leaflet-container {
   width: 100%;
   height: 100%;
-  position: relative;
-  outline: none;
 }
 
-.leaflet-tile,
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-pane > svg,
-.leaflet-pane > canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.leaflet-tile {
-  height: 256px;
-  width: 256px;
-  will-change: transform;
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
-.leaflet-pane {
-  z-index: 400;
+@keyframes sunFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-5px);
+  }
 }
 
-.leaflet-marker-icon {
-  margin-top: -41px;
-  margin-left: -13px;
+@keyframes driftSlow {
+  from {
+    transform: translateX(-10%);
+  }
+  to {
+    transform: translateX(10%);
+  }
 }
 
-.leaflet-popup-content-wrapper {
-  background: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+@keyframes driftFast {
+  from {
+    transform: translateX(-16%);
+  }
+  to {
+    transform: translateX(14%);
+  }
 }
 
-/* Responsiveness for smaller screens */
+@keyframes rainfall {
+  from {
+    transform: translate3d(0, 0, 0) rotate(11deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.88;
+  }
+  to {
+    transform: translate3d(-16px, 162px, 0) rotate(11deg);
+    opacity: 0;
+  }
+}
+
+@keyframes snowfall {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  to {
+    transform: translate3d(-14px, 174px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes mapPulse {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 1080px) {
+  .weather-content {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    min-height: 41rem;
+  }
+
+  .map-frame {
+    min-height: 100%;
+  }
+}
+
 @media (max-width: 640px) {
-  .leaflet-container {
-    height: 250px; /* Adjust the map height for small devices */
+  .app-shell {
+    padding: 0.8rem;
   }
 
-  /* Adjust weather details container layout */
-  .weather-details {
-    margin-top: 16px;
-    width: 100%;
-    
+  .weather-content {
+    padding: 0.65rem;
   }
 
-  .weather-details h3 {
-    font-size: 1.25rem;
+  .weather-panel {
+    padding: 0.85rem;
   }
 
-  /* Leaflet adjustments for smaller devices */
-  .leaflet-popup-content-wrapper {
-    font-size: 0.875rem;
+  .weather-search {
+    grid-template-columns: 1fr;
   }
-}
 
-@media (min-width: 640px) {
-  /* Larger devices: Adjust the map size and layout for better view */
-  .leaflet-container {
-    height: 680px; /* Larger map on bigger screens */
-  }
-}
-
-/* Additional custom styling for small screens */
-@media (max-width: 640px) {
-  .flex-1 {
-    width: 100% !important; /* Ensure full width of map or content on smaller screens */
+  .weather-search button {
+    height: 2.65rem;
   }
 }

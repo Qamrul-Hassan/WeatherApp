@@ -1,30 +1,39 @@
-const SnowAnimation = () => (
-    <svg width="150" height="150" viewBox="0 0 150 150">
-      {[...Array(20)].map((_, i) => (
-        <circle
-          key={i}
-          cx={Math.random() * 150}
-          cy={Math.random() * 150}
-          r="2"
-          fill="white"
-          style={{
-            animation: `fallSnow ${Math.random() * 2 + 1}s linear infinite`,
-          }}
-        />
-      ))}
-      <style>
-        {`
-          @keyframes fallSnow {
-            0% {
-              transform: translateY(0);
-            }
-            100% {
-              transform: translateY(150px);
-            }
-          }
-        `}
-      </style>
-    </svg>
+"use client";
+
+import { useMemo } from "react";
+
+const SnowAnimation = () => {
+  const flakes = useMemo(
+    () =>
+      Array.from({ length: 42 }).map((_, index) => ({
+        id: index,
+        left: `${(index * 23) % 100}%`,
+        size: `${2 + (index % 4)}px`,
+        delay: `${(index * 0.15).toFixed(2)}s`,
+        duration: `${(3.4 + (index % 6) * 0.4).toFixed(2)}s`,
+      })),
+    []
   );
-  
-  export default SnowAnimation;
+
+  return (
+    <div className="scene scene-snow" aria-hidden="true">
+      <div className="snow-field">
+        {flakes.map((flake) => (
+          <span
+            key={flake.id}
+            className="snowflake"
+            style={{
+              left: flake.left,
+              width: flake.size,
+              height: flake.size,
+              animationDelay: flake.delay,
+              animationDuration: flake.duration,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default SnowAnimation;
