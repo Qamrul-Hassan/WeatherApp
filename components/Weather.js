@@ -265,39 +265,39 @@ const Weather = () => {
 
     try {
       const response = await fetch(
-        `https://restcountries.com/v3.1/name/${encodeURIComponent(normalized)}?fields=name,cca2,capital,altSpellings`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`
       );
       if (!response.ok) return null;
       const data = await response.json();
       if (!Array.isArray(data) || data.length === 0) return null;
 
-      const match = data.find((country) => {
-        const commonName = sanitizePlaceText(country?.name?.common || "").toLowerCase();
-        const officialName = sanitizePlaceText(country?.name?.official || "").toLowerCase();
-        const code = sanitizePlaceText(country?.cca2 || "").toLowerCase();
-        const altSpellings = Array.isArray(country?.altSpellings)
-          ? country.altSpellings.map((item) => sanitizePlaceText(item).toLowerCase())
-          : [];
+      // Find the best match for country/location
+      const match = data.find((location) => {
+        const locName = sanitizePlaceText(location?.name || "").toLowerCase();
+        const stateName = sanitizePlaceText(location?.state || "").toLowerCase();
+        const countryName = sanitizePlaceText(location?.country || "").toLowerCase();
+        
+        // Exact match on country name or country code
         return (
-          commonName === normalized ||
-          officialName === normalized ||
-          code === normalized ||
-          altSpellings.includes(normalized)
+          countryName === normalized ||
+          location?.country?.toLowerCase() === normalized ||
+          locName === normalized ||
+          stateName === normalized
         );
       });
 
-      const country = match || data[0];
-      if (!country?.cca2) return null;
+      const location = match || data[0];
+      if (!location?.country) return null;
 
       return {
-        code: country.cca2.toUpperCase(),
-        name: country?.name?.common || "",
-        capital: Array.isArray(country?.capital) && country.capital[0] ? country.capital[0] : "",
+        code: location.country.toUpperCase(),
+        name: location.country || "",
+        capital: location.name || "",
       };
     } catch {
       return null;
     }
-  }, []);
+  }, [API_KEY]);
 
   const resolveSearchIntent = useCallback(
     async (rawInput) => {
